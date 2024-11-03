@@ -1,0 +1,51 @@
+pip install python-telegram-bot requests
+import requests
+from telegram import Update
+from telegram.ext import Updater, CommandHandler, CallbackContext
+
+# توكن البوت الخاص بك من BotFather
+TOKEN = '7494502294:AAHnzdPNlqSUmWEr8wn_f2LJ-mvir4R1Bag'
+
+# رابط API للعملات الرقمية من CoinGecko
+CRYPTO_URL = 'https://www.coingecko.com/en/developers/dashboard'
+# رابط API لأسعار الذهب
+GOLD_URL = 'https://metals-api.com/api/latest?access_key=YOUR_METALS_API_KEY&base=USD&symbols=XAU'
+
+def get_crypto_news():
+    response = requests.get(CRYPTO_URL)
+    data = response.json()
+    news = "أحدث أسعار العملات الرقمية:\n"
+    for coin in data:
+        news += f"{coin['name']}: ${coin['current_price']}\n"
+    return news
+
+def get_gold_price():
+    response = requests.get(GOLD_URL)
+    data = response.json()
+    price = data['rates']['XAU']
+    return f"سعر الذهب اليوم: {price} دولار للأونصة."
+
+def start(update: Update, context: CallbackContext) -> None:
+    update.message.reply_text("مرحبا! أرسل /crypto للأخبار اليومية للعملات الرقمية أو /gold لسعر الذهب اليوم.")
+
+def crypto(update: Update, context: CallbackContext) -> None:
+    news = get_crypto_news()
+    update.message.reply_text(news)
+
+def gold(update: Update, context: CallbackContext) -> None:
+    price = get_gold_price()
+    update.message.reply_text(price)
+
+def main():
+    updater = Updater(TOKEN)
+    dispatcher = updater.dispatcher
+
+    dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(CommandHandler("crypto", crypto))
+    dispatcher.add_handler(CommandHandler("gold", gold))
+
+    updater.start_polling()
+    updater.idle()
+
+if __name__ == '__main__':
+    main()
